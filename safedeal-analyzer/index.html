@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="ko" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SafeDeal URL Analyzer — 중고거래 사기 위험도 & 적정 시세 판독</title>
+  <meta name="description" content="당근마켓·번개장터·중고나라 거래글 URL 하나로 상품 정보를 자동 추출하고, 내장 중고 시세 DB와 위험 키워드 엔진으로 사기 위험도(0~100점)와 적정 시세를 판독합니다.">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#F8F9FA">
+  <meta property="og:title" content="SafeDeal URL Analyzer">
+  <meta property="og:description" content="중고거래 링크 하나로 사기 위험도와 적정 시세를 3초 만에 판독">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 4l22 8v18c0 14-9.5 25-22 30C19.5 55 10 44 10 30V12z' fill='%231A73E8'/%3E%3Cpath d='M22 32l7 7 14-15' stroke='white' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script>
+    /* 구글 크롬 라이트 모드 기본 적용 (우측 상단 토글 시 크롬 다크 모드 전환) */
+    (function () {
+      try {
+        var t = localStorage.getItem('sd-chrome-theme') || 'light';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
+</head>
+<body>
+  <!-- ============ 상단 바 ============ -->
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a id="homeLogo" class="brand" href="#" aria-label="SafeDeal URL Analyzer 홈으로 초기화">
+        <svg class="brand-logo" viewBox="0 0 64 64" aria-hidden="true">
+          <path d="M32 4l22 8v18c0 14-9.5 25-22 30C19.5 55 10 44 10 30V12z" fill="#1A73E8"/>
+          <path d="M22 32l7 7 14-15" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="brand-text"><strong>SafeDeal</strong> URL Analyzer</span>
+      </a>
+      <div class="top-actions">
+        <button id="themeToggle" class="icon-btn" type="button">
+          <svg class="ico-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></g></svg>
+          <svg class="ico-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z" fill="currentColor"/></svg>
+          <span class="sr-only">테마 전환</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- ============ 히어로 + URL 분석기 ============ -->
+    <section class="hero" aria-labelledby="heroTitle">
+      <p class="eyebrow">데이터 기반 중고거래 사기 위험도 · 적정 시세 판독</p>
+      <h1 id="heroTitle">거래글 링크 하나로<br><span class="grad">사기 위험도와 적정 시세</span>를 판독하세요</h1>
+      <p class="lead">중고거래 게시글 URL을 붙여넣으면 상품 정보를 자동 추출하고,<br class="br-pc"> <b>실시간 온라인 중고 매물 시세 크롤링</b>과 위험 키워드 엔진으로 <b>0~100점 위험도</b>를 진단합니다.</p>
+
+      <form id="urlForm" class="search" autocomplete="off" novalidate>
+        <div class="search-field">
+          <svg class="search-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 005.66 0l3-3a4 4 0 00-5.66-5.66l-1 1M14 10a4 4 0 00-5.66 0l-3 3a4 4 0 005.66 5.66l1-1" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+          <label for="urlInput" class="sr-only">중고거래 게시글 URL</label>
+          <input id="urlInput" name="url" type="text" inputmode="url" spellcheck="false" enterkeyhint="go"
+                 placeholder="https://m.bunjang.co.kr/products/… 거래글 URL을 붙여넣으세요">
+          <button type="button" id="clearBtn" class="clear-btn" aria-label="입력 지우기" hidden>✕</button>
+        </div>
+        <button id="analyzeBtn" class="btn-primary btn-xl" type="submit">
+          <span class="btn-spinner" aria-hidden="true"></span>
+          <span class="btn-label">URL 분석하기</span>
+          <svg class="btn-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </form>
+
+      <!-- 시연용 원클릭 프리셋 -->
+      <div class="presets-wrap">
+        <div class="presets-title"><span>🎬 발표 시연용 원클릭 테스트 URL</span><small>클릭하면 URL 입력과 분석이 바로 실행됩니다</small></div>
+        <div class="presets">
+          <button type="button" class="preset preset-safe" data-preset="normal">
+            <span class="preset-num">①</span>
+            <span class="preset-body">
+              <span class="preset-tag">정상 매물 예시</span>
+              <strong>아이폰8 실버 64GB A급 8만원</strong>
+              <small>실시간 중고 시세 자동 비교 · 정상 매물</small>
+            </span>
+            <span class="preset-score">예상 <b>안전</b></span>
+          </button>
+          <button type="button" class="preset preset-scam" data-preset="scam">
+            <span class="preset-num">②</span>
+            <span class="preset-body">
+              <span class="preset-tag">사기 의심 매물 예시</span>
+              <strong>버즈3 프로 미개봉 9만원</strong>
+              <small>외부 안전결제 링크 + 카톡 유도</small>
+            </span>
+            <span class="preset-score">예상 <b>사기 극주의</b></span>
+          </button>
+          <button type="button" class="preset preset-ban" data-preset="banned">
+            <span class="preset-num">③</span>
+            <span class="preset-body">
+              <span class="preset-tag">불법 의약품 · 거래 금지 품목</span>
+              <strong>비만치료제 위고비</strong>
+              <small>금전 갈취 신상 협박 사기 우려</small>
+            </span>
+            <span class="preset-score">예상 <b>거래 금지</b></span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 진행 단계 ============ -->
+    <section id="progress" class="card progress" hidden aria-live="polite">
+      <div class="card-head"><h3 id="progressTitle">거래글 정보를 가져오는 중…</h3><span class="card-hint">번개장터 API → 멀티 프록시 → OpenGraph 순차 호출</span></div>
+      <ol id="steps" class="steps"></ol>
+    </section>
+
+    <!-- ============ 네이버 카페 등 보안 정책용 1초 미니 입력 모달 (상품명 / 판매 가격 2칸) ============ -->
+    <div id="miniModal" class="mini-modal-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="miniModalTitle">
+      <div class="mini-modal-card">
+        <div class="mini-modal-head">
+          <span class="mini-modal-badge">🔒 네이버 카페 보안 정책 스마트 연동</span>
+          <button type="button" id="miniCloseBtn" class="mini-close-btn" aria-label="모달 닫기">✕</button>
+        </div>
+        <h3 id="miniModalTitle">⚡ 1초 미니 입력으로 즉시 분석</h3>
+        <p id="miniModalNotice" class="mini-modal-desc">네이버 카페 게시글은 로그인 보안 정책상 외부 추출이 제한됩니다. <b>상품명과 판매 가격 2칸</b>만 입력하면 1초 만에 적정 시세·위험도 대시보드가 열립니다.</p>
+        <form id="miniModalForm" class="mini-modal-form" autocomplete="off" novalidate>
+          <div class="mini-field">
+            <label for="miniTitle">상품명</label>
+            <input id="miniTitle" type="text" placeholder="예: 아이폰 16 프로 256GB A급, 갤럭시 S25 울트라" maxlength="120" required>
+          </div>
+          <div class="mini-field">
+            <label for="miniPrice">판매 가격</label>
+            <input id="miniPrice" type="text" inputmode="numeric" placeholder="예: 105만원 또는 1050000" required>
+          </div>
+          <div class="mini-modal-actions">
+            <button type="button" id="miniCancel" class="btn-ghost">취소</button>
+            <button type="submit" class="btn-primary">⚡ 1초 만에 대시보드 분석 →</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ============ 빠른 스마트 입력 카드 (보안 정책 · 추가 입력 시) ============ -->
+    <section id="manual" class="card manual" hidden aria-labelledby="manualTitle">
+      <div class="card-head">
+        <h3 id="manualTitle">⚡ 빠른 스마트 입력 카드</h3>
+        <span class="card-hint">한 줄 붙여넣기 또는 가격 입력만으로 즉시 대시보드 분석</span>
+      </div>
+      <p id="manualNotice" class="manual-notice"></p>
+      <div class="smart-paste-box">
+        <label for="mSmart">🪄 원클릭 스마트 자동 채우기 <small>(거래글 제목·본문을 통째로 붙여넣으면 제목·판매가·설명을 자동 분리합니다)</small></label>
+        <textarea id="mSmart" rows="2" placeholder="예) 아이폰 15 프로 256GB A급 85만원에 팝니다. 업자 매입가는 70만원 부르네요. 직거래 선호합니다."></textarea>
+      </div>
+      <form id="manualForm" class="manual-form" novalidate>
+        <div class="field field-title">
+          <label for="mTitle">상품명 / 제목 <small>(비워도 본문 첫 줄에서 자동 인식)</small></label>
+          <input id="mTitle" type="text" placeholder="예) 아이폰15 프로 256GB A급" maxlength="120">
+        </div>
+        <div class="field field-price">
+          <label for="mPrice">실제 판매 가격 <small>(원 / 만원)</small></label>
+          <input id="mPrice" type="text" inputmode="numeric" placeholder="예) 850000 또는 85만원">
+        </div>
+        <details id="mDescWrap" class="field field-desc">
+          <summary>본문 설명 확인 / 추가 입력 <small>(선택 · 위험 키워드 및 비교가격 필터링 적용)</small></summary>
+          <textarea id="mDesc" rows="4" placeholder="게시글 본문을 붙여넣으면 외부링크 · 카톡 · 수고비 등 위험 키워드를 정밀 분석합니다."></textarea>
+        </details>
+        <div class="manual-actions">
+          <button type="button" id="mCancel" class="btn-ghost">닫기</button>
+          <button type="submit" class="btn-primary">⚡ 즉시 대시보드 분석하기 →</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ============ 결과 대시보드 ============ -->
+    <section id="results" class="results" hidden aria-live="polite"></section>
+
+    <!-- ============ 엔진 소개 ============ -->
+    <section class="features" aria-label="분석 엔진 구성">
+      <article class="feature"><span class="f-ico">🔗</span><h4>URL 원클릭 자동 추출</h4><p>번개장터 공개 API와 멀티 프록시·OpenGraph를 순차 호출해 썸네일·제목·가격·본문을 가져옵니다.</p></article>
+      <article class="feature"><span class="f-ico">📊</span><h4>실시간 중고 시세 계산기</h4><p>실제 거래 중인 매물 40건을 실시간 크롤링하고 이상치를 제거한 사분위 중앙값·절사평균으로 적정가를 산출합니다.</p></article>
+      <article class="feature"><span class="f-ico">🎣</span><h4>사기 패턴 키워드 엔진</h4><p>외부 결제 링크 · 사칭 도메인 · 카톡 유도 · 수고비 · 수수료 재입금 · 직거래 불가를 정규표현식으로 탐지합니다.</p></article>
+      <article class="feature"><span class="f-ico">🚫</span><h4>거래 금지 품목 필터</h4><p>비만치료제 위고비 · 처방약 · 도수 렌즈/안경 · 전자담배 · 주류 등 법적 거래 금지 품목을 자동 판별합니다.</p></article>
+    </section>
+
+    <!-- ============ 🔍 실시간 중고 시세 조회기 ============ -->
+    <section class="card market-lookup" aria-labelledby="marketLookupTitle">
+      <div class="card-head">
+        <div class="card-title-row">
+          <h3 id="marketLookupTitle">🔍 실시간 중고 시세 조회기</h3>
+          <span class="rt-live-badge">LIVE · 사분위 절사평균</span>
+        </div>
+        <span class="card-hint">현재 올라와 있는 실제 중고 매물 가격을 실시간 분석하여 적정 시세를 즉시 계산합니다</span>
+      </div>
+
+      <form id="marketSearchForm" class="market-search-bar" autocomplete="off" novalidate>
+        <div class="market-input-wrap">
+          <svg class="market-search-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" fill="none"/><path d="M20 20l-4.2-4.2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <label for="marketQueryInput" class="sr-only">조회할 중고 모델명 검색</label>
+          <input id="marketQueryInput" type="search" placeholder="궁금한 모델명 검색 (예: 아이폰 18 Pro, 아이폰 듀오, 아이폰 17 Pro 256, 갤럭시 S25 울트라)">
+        </div>
+        <button id="marketSearchBtn" type="submit" class="btn-primary">
+          <span class="btn-spinner" aria-hidden="true"></span>
+          <span>실시간 시세 조회</span>
+        </button>
+      </form>
+
+      <div class="popular-chips" aria-label="인기 검색어 빠른 테스트">
+        <span class="popular-label">인기 검색어:</span>
+        <button type="button" class="popular-chip" data-market-chip="아이폰 18 Pro">아이폰 18 Pro</button>
+        <button type="button" class="popular-chip" data-market-chip="아이폰 듀오">아이폰 듀오</button>
+        <button type="button" class="popular-chip" data-market-chip="아이폰 17 Pro">아이폰 17 Pro</button>
+        <button type="button" class="popular-chip" data-market-chip="갤럭시 S25 울트라">갤럭시 S25 울트라</button>
+        <button type="button" class="popular-chip" data-market-chip="에어팟 프로 2세대">에어팟 프로 2세대</button>
+      </div>
+
+      <div id="marketResultBox" class="market-result-box" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p><b>SafeDeal URL Analyzer</b> — 정적 프론트엔드만으로 동작하는 중고거래 안전 진단 서비스</p>
+      <p class="muted">본 서비스의 위험도와 시세는 공개 데이터와 규칙 기반 추정치로, 법적 판단이나 거래 보증이 아닙니다. 의심되는 거래는 플랫폼 안전결제를 이용하고 경찰청(112) · 사이버범죄 신고시스템에 신고하세요.</p>
+    </div>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/fetcher.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
